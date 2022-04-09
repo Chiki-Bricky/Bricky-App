@@ -1,6 +1,7 @@
 // @dart=2.9
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
@@ -8,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import '../send_image.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as syspaths;
+
+import 'package:flutter/services.dart' show rootBundle;
 
 class TakePictureScreen extends StatefulWidget {
   //        <uses-permission android:name="android.permission.INTERNET" /><uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -24,34 +27,35 @@ class TakePictureScreen extends StatefulWidget {
 class _TakePictureScreenState extends State<TakePictureScreen> {
   File _storedImage;
   File _pickedImage;
+  String text;
 
   void onSelectImage(File pickedImage) {
     _pickedImage = pickedImage;
   }
 
   Future<void> _sendPhoto() async {
-    File imageFile = _storedImage;
-    List<int> imageBytes = await imageFile.readAsBytesSync();
+    Image img = Image.asset(_storedImage.path);
+    Uint8List imageBytes =
+        (await rootBundle.load(_storedImage.path)).buffer.asUint8List();
     String base64Image = base64Encode(imageBytes);
 
-    final url = Uri.parse('http://10.0.2.2:5000/proccessImage');
-    http
+    final url = Uri.parse('http://192.168.31.234:5000/proccessImage');
+    final response = http
         .post(
       url,
       headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
+        'Content-Type': 'application/json; charset=UTF-8'
       },
       body: jsonEncode({
         'image': base64Image,
       }),
     )
-        .then(
-      (response) {
-        //print(json.decode(response.body));
-        //add to list
-        // _items.insert(0, newProduct); // at the start of the list
-      },
-    );
+        .then((response) {
+      print("Response status: ${response.statusCode}");
+      setState(() {
+        text = "Response status: ${response.statusCode}";
+      });
+    });
   }
 
   Future<void> _takePicture() async {
@@ -68,7 +72,6 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
     final appDir = await syspaths.getApplicationDocumentsDirectory();
     final fileName = path.basename(imageFile.path);
     final savedImage = await imageFile.copy('${appDir.path}/$fileName');
-    // widget.onSelectImage(savedImage);
     setState(() {
       _pickedImage = savedImage;
     });
@@ -90,8 +93,8 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
               border: Border.all(width: 1, color: Colors.grey),
             ),
             child: _storedImage != null
-                ? Image.file(
-                    _storedImage as File,
+                ? Image.asset(
+                    _storedImage.path,
                     fit: BoxFit.cover,
                     width: double.infinity,
                   )
@@ -107,21 +110,28 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
           Expanded(
             child: Column(
               children: [
-                FlatButton.icon(
+                TextButton.icon(
                   icon: Icon(Icons.camera),
-                  label: Text('Take Picture'),
-                  textColor: Theme.of(context).primaryColor,
+                  label: const Text('Take Picture'),
                   onPressed: _takePicture,
                 ),
                 const SizedBox(
                   height: 10,
                 ),
-                FlatButton.icon(
+                TextButton.icon(
                   icon: Icon(Icons.camera),
-                  label: Text('Send Photo'),
-                  textColor: Theme.of(context).primaryColor,
+                  label: const Text('Send Photo'),
                   onPressed: _sendPhoto,
                 ),
+                text != null
+                    ? Text(
+                        text,
+                        textAlign: TextAlign.center,
+                      )
+                    : const Text(
+                        'No request',
+                        textAlign: TextAlign.center,
+                      ),
               ],
             ),
           ),
