@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 
-import 'package:flutter_application_1/Pages/take_picture_screen.dart';
+import 'package:Bricky/Pages/take_picture_screen.dart';
 
 class Home extends StatefulWidget {
   const Home({
