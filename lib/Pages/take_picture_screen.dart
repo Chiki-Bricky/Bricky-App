@@ -77,14 +77,14 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
       appBar: AppBar(
         title: const Text('Take and send picture'),
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Container(
-            width: 150,
-            height: 200,
+            height: 500,
             decoration: BoxDecoration(
-              border: Border.all(width: 1, color: Colors.grey),
+              border: Border.all(width: 3, color: Colors.grey),
             ),
             child: _pickedImage != null
                 ? Image.asset(
@@ -99,36 +99,19 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
             alignment: Alignment.center,
           ),
           const SizedBox(
-            width: 10,
+            height: 20,
           ),
-          Expanded(
-            child: Column(
-              children: [
-                TextButton.icon(
-                  icon: Icon(Icons.camera),
-                  label: const Text('Take Picture'),
-                  onPressed: _takePicture,
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                TextButton.icon(
-                  icon: Icon(Icons.camera),
-                  label: const Text('Send Photo'),
-                  onPressed: _sendPhoto,
-                ),
-                text != null
-                    ? Text(
-                        text,
-                        textAlign: TextAlign.center,
-                      )
-                    : const Text(
-                        'No request',
-                        textAlign: TextAlign.center,
-                      ),
-              ],
-            ),
+          TextButton.icon(
+            icon: const Icon(Icons.camera),
+            label: const Text('Take Picture'),
+            onPressed: _takePicture,
           ),
+          TextButton.icon(
+            icon: const Icon(Icons.send),
+            label: const Text('Send Photo'),
+            onPressed: _sendPhoto,
+          ),
+          Text(text ?? 'No request'),
         ],
       ),
     );
