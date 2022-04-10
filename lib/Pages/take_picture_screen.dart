@@ -54,9 +54,17 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
     });
   }
 
-  Future<void> _takePicture() async {
+  Future<void> _takePictureFromCamera() async {
     final imageFile = await ImagePicker().getImage(source: ImageSource.camera);
+    _saveImage(imageFile);
+  }
 
+  Future<void> _takePictureFromGallery() async {
+    final imageFile = await ImagePicker().getImage(source: ImageSource.gallery);
+    _saveImage(imageFile);
+  }
+
+  Future<void> _saveImage(PickedFile imageFile) async {
     if (imageFile == null) {
       return;
     }
@@ -102,9 +110,17 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
             height: 20,
           ),
           TextButton.icon(
-            icon: const Icon(Icons.camera),
-            label: const Text('Take Picture'),
-            onPressed: _takePicture,
+            icon: const Icon(Icons.camera_alt),
+            label: const Text('Camera'),
+            onPressed: _takePictureFromCamera,
+          ),
+          TextButton.icon(
+            icon: const Icon(Icons.photo_library),
+            label: const Text('Gallery'),
+            onPressed: _takePictureFromGallery,
+          ),
+          const SizedBox(
+            height: 10,
           ),
           TextButton.icon(
             icon: const Icon(Icons.send),
