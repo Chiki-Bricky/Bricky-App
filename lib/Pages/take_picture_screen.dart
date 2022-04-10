@@ -13,10 +13,7 @@ import 'package:path_provider/path_provider.dart' as syspaths;
 import 'package:flutter/services.dart' show rootBundle;
 
 class TakePictureScreen extends StatefulWidget {
-  //        <uses-permission android:name="android.permission.INTERNET" /><uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
   static const routeName = '/take-picture';
-  // final Function onSelectImage;
 
   TakePictureScreen();
 
@@ -25,7 +22,6 @@ class TakePictureScreen extends StatefulWidget {
 }
 
 class _TakePictureScreenState extends State<TakePictureScreen> {
-  File _storedImage;
   File _pickedImage;
   String text;
 
@@ -34,13 +30,13 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<void> _sendPhoto() async {
-    Image img = Image.asset(_storedImage.path);
+    Image img = Image.asset(_pickedImage.path);
     Uint8List imageBytes =
-        (await rootBundle.load(_storedImage.path)).buffer.asUint8List();
+        (await rootBundle.load(_pickedImage.path)).buffer.asUint8List();
     String base64Image = base64Encode(imageBytes);
 
     final url = Uri.parse('http://192.168.31.234:5000/proccessImage');
-    final response = http
+    http
         .post(
       url,
       headers: <String, String>{
@@ -59,19 +55,17 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<void> _takePicture() async {
-    final imageFile = await ImagePicker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 600,
-    );
+    final imageFile = await ImagePicker().getImage(source: ImageSource.camera);
+
     if (imageFile == null) {
       return;
     }
-    setState(() {
-      _storedImage = imageFile;
-    });
+
     final appDir = await syspaths.getApplicationDocumentsDirectory();
     final fileName = path.basename(imageFile.path);
-    final savedImage = await imageFile.copy('${appDir.path}/$fileName');
+    final savedImage =
+        await File(imageFile.path).copy('${appDir.path}/$fileName');
+
     setState(() {
       _pickedImage = savedImage;
     });
@@ -92,9 +86,9 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
             decoration: BoxDecoration(
               border: Border.all(width: 1, color: Colors.grey),
             ),
-            child: _storedImage != null
+            child: _pickedImage != null
                 ? Image.asset(
-                    _storedImage.path,
+                    _pickedImage.path,
                     fit: BoxFit.cover,
                     width: double.infinity,
                   )
