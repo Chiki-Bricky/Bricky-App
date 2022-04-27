@@ -20,8 +20,8 @@ class TakePictureScreen extends StatefulWidget {
 
 class AddBorder extends StatelessWidget {
   String className;
-  double LU_X = 0.0, LU_Y = 0, RD_X = 0, RD_Y = 0;
-  List colors = [
+  double x = 0.0, y = 0, width = 0, height = 0;
+  static List colors = [
     Colors.red,
     Colors.green,
     Colors.yellow,
@@ -30,9 +30,10 @@ class AddBorder extends StatelessWidget {
     Colors.orange,
     Colors.lime
   ];
-  Random random = new Random();
+  static Random random = new Random();
+  int rand = random.nextInt(colors.length);
 
-  AddBorder(this.className, this.LU_X, this.LU_Y, this.RD_X, this.RD_Y) {}
+  AddBorder(this.className, this.x, this.y, this.width, this.height) {}
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +42,15 @@ class AddBorder extends StatelessWidget {
       textDirection: TextDirection.ltr,
       children: <Widget>[
         Container(
-          margin: EdgeInsets.only(left: LU_X, top: LU_Y),
-          padding: EdgeInsets.only(left: RD_X, top: RD_Y),
-          decoration: BoxDecoration(
-              border: Border.all(color: colors[random.nextInt(colors.length)])),
-          child: Text(className),
+          margin: EdgeInsets.only(left: x, top: y),
+          width: width,
+          height: height,
+          decoration: BoxDecoration(border: Border.all(color: colors[rand])),
+          child: Text(
+            className,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors[rand]),
+          ),
         ),
       ],
     ));
@@ -58,12 +63,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   static File pickedImage;
   String serverResponse;
 
-  List coordinateLU_X = [];
-  List coordinateLU_Y = [];
-  List coordinateRD_X = [];
-  List coordinateRD_Y = [];
-  List classNames = [];
-  List borders = [];
+  List bordersX = [];
+  List bordersY = [];
+  List bordersWidth = [];
+  List bordersHeight = [];
+  List bordersNames = [];
   bool isVisibleCircle = false;
 
   void onSelectImage(File selectedImage) {
@@ -96,10 +100,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<void> _sendPhoto() async {
-    coordinateLU_X.clear();
-    coordinateLU_Y.clear();
-    coordinateRD_X.clear();
-    coordinateRD_Y.clear();
+    bordersNames.clear();
+    bordersX.clear();
+    bordersY.clear();
+    bordersWidth.clear();
+    bordersHeight.clear();
 
     if (pickedImage == null) {
       setState(() {
@@ -119,11 +124,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       for (int i = 0; i < bricks.length; i++) {
         final singleBrick = bricks[i];
         print(singleBrick);
-        classNames.add(singleBrick['class']);
-        coordinateLU_X.add(singleBrick['xmin']);
-        coordinateLU_Y.add(singleBrick['ymin']);
-        coordinateRD_X.add(singleBrick['xmax'] - singleBrick['xmin']);
-        coordinateRD_Y.add(singleBrick['ymax'] - singleBrick['ymin']);
+        bordersNames.add(singleBrick['class']);
+        bordersX.add(singleBrick['xmin']);
+        bordersY.add(singleBrick['ymin']);
+        bordersWidth.add(singleBrick['xmax'] - singleBrick['xmin']);
+        bordersHeight.add(singleBrick['ymax'] - singleBrick['ymin']);
       }
       isVisibleCircle = true;
     });
@@ -158,16 +163,16 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               alignment: Alignment.center,
             ),
             if (isVisibleCircle)
-              for (int i = 0; i < classNames.length; i++)
+              for (int i = 0; i < bordersNames.length; i++)
                 if (isVisibleCircle)
                   AddBorder(
-                      classNames[i],
-                      coordinateLU_X[i].toDouble() *
-                          ((MediaQuery.of(context).size.width - 3 * 2) / 1024),
-                      coordinateLU_Y[i].toDouble() * ((500) / 1024),
-                      coordinateRD_X[i].toDouble() *
-                          ((MediaQuery.of(context).size.width - 3 * 2) / 1024),
-                      coordinateRD_Y[i].toDouble() * ((500) / 1024)),
+                      bordersNames[i],
+                      bordersX[i].toDouble() *
+                          ((MediaQuery.of(context).size.width) / 1024),
+                      bordersY[i].toDouble() * ((500) / 1024),
+                      bordersWidth[i].toDouble() *
+                          ((MediaQuery.of(context).size.width) / 1024),
+                      bordersHeight[i].toDouble() * ((500) / 1024)),
           ]),
           const SizedBox(
             height: 20,
