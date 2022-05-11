@@ -38,22 +38,29 @@ class AddBorder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+        width: this.x + this.width + 50,
         child: Stack(
-      textDirection: TextDirection.ltr,
-      children: <Widget>[
-        Container(
-          margin: EdgeInsets.only(left: x, top: y),
-          width: width,
-          height: height,
-          decoration: BoxDecoration(border: Border.all(color: colors[rand])),
-          child: Text(
-            className,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: colors[rand]),
-          ),
-        ),
-      ],
-    ));
+          textDirection: TextDirection.ltr,
+          children: <Widget>[
+            Positioned(
+                left: x,
+                top: y - 25,
+                child: Container(
+                    width: 100,
+                    height: 30,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      className,
+                      style: TextStyle(color: colors[rand]),
+                    ))),
+            Container(
+                margin: EdgeInsets.only(left: x, top: y),
+                width: width,
+                height: height,
+                decoration:
+                    BoxDecoration(border: Border.all(color: colors[rand]))),
+          ],
+        ));
   }
 
   void setState(int Function() param0) {}
@@ -151,28 +158,41 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 border: Border.all(width: 3, color: Colors.grey),
               ),
               child: pickedImage != null
-                  ? Image.asset(
-                      pickedImage.path,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+                  // ? Image.asset(pickedImage.path,
+                  //     fit: BoxFit.fitHeight, width: 512, height: 512)
+                  ? AspectRatio(
+                      aspectRatio: 1,
+                      child: Image.asset(
+                        pickedImage.path,
+                        fit: BoxFit.fill,
+                      ),
                     )
                   : const Text(
                       'No Image Taken',
                       textAlign: TextAlign.center,
                     ),
-              alignment: Alignment.center,
+              alignment: Alignment.topCenter,
             ),
             if (isVisibleCircle)
               for (int i = 0; i < bordersNames.length; i++)
                 if (isVisibleCircle)
                   AddBorder(
+                      // bordersNames[i],
+                      // bordersX[i].toDouble() *
+                      //     ((MediaQuery.of(context).size.width) / 1024),
+                      // bordersY[i].toDouble() * ((500) / 1024),
+                      // bordersWidth[i].toDouble() *
+                      //     ((MediaQuery.of(context).size.width) / 1024),
+                      // bordersHeight[i].toDouble() * ((500) / 1024)),
                       bordersNames[i],
                       bordersX[i].toDouble() *
-                          ((MediaQuery.of(context).size.width) / 1024),
-                      bordersY[i].toDouble() * ((500) / 1024),
+                          ((MediaQuery.of(context).size.width) / 512),
+                      bordersY[i].toDouble() *
+                          ((MediaQuery.of(context).size.width) / 512),
                       bordersWidth[i].toDouble() *
-                          ((MediaQuery.of(context).size.width) / 1024),
-                      bordersHeight[i].toDouble() * ((500) / 1024)),
+                          ((MediaQuery.of(context).size.width) / 512),
+                      bordersHeight[i].toDouble() *
+                          ((MediaQuery.of(context).size.width) / 512)),
           ]),
           const SizedBox(
             height: 20,
