@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+// import 'package:image_cropper/image_cropper.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as syspaths;
@@ -20,6 +21,7 @@ class TakePictureScreen extends StatefulWidget {
 
 class AddBorder extends StatelessWidget {
   String className;
+  double confidence;
   double x = 0.0, y = 0, width = 0, height = 0;
   static List colors = [
     Colors.red,
@@ -33,7 +35,8 @@ class AddBorder extends StatelessWidget {
   static Random random = new Random();
   int rand = random.nextInt(colors.length);
 
-  AddBorder(this.className, this.x, this.y, this.width, this.height) {}
+  AddBorder(this.className, this.confidence, this.x, this.y, this.width,
+      this.height) {}
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +53,7 @@ class AddBorder extends StatelessWidget {
                     height: 30,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      className,
+                      className + " - " + confidence.toString(),
                       style: TextStyle(color: colors[rand]),
                     ))),
             Container(
@@ -75,6 +78,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   List bordersWidth = [];
   List bordersHeight = [];
   List bordersNames = [];
+  List bordersConfidence = [];
   bool isVisibleCircle = false;
 
   void onSelectImage(File selectedImage) {
@@ -82,16 +86,16 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<void> _takePictureFromCamera() async {
-    final imageFile = await ImagePicker().getImage(source: ImageSource.camera);
+    final imageFile = await ImagePicker.pickImage(source: ImageSource.camera);
     _saveImage(imageFile);
   }
 
   Future<void> _takePictureFromGallery() async {
-    final imageFile = await ImagePicker().getImage(source: ImageSource.gallery);
+    final imageFile = await ImagePicker.pickImage(source: ImageSource.gallery);
     _saveImage(imageFile);
   }
 
-  Future<void> _saveImage(PickedFile imageFile) async {
+  Future<void> _saveImage(File imageFile) async {
     if (imageFile == null) {
       return;
     }
@@ -104,14 +108,20 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     setState(() {
       pickedImage = savedImage;
     });
+    clearBorders();
   }
 
-  Future<void> _sendPhoto() async {
+  void clearBorders() {
     bordersNames.clear();
+    bordersConfidence.clear();
     bordersX.clear();
     bordersY.clear();
     bordersWidth.clear();
     bordersHeight.clear();
+  }
+
+  Future<void> _sendPhoto() async {
+    clearBorders();
 
     if (pickedImage == null) {
       setState(() {
@@ -132,6 +142,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         final singleBrick = bricks[i];
         print(singleBrick);
         bordersNames.add(singleBrick['class']);
+        bordersConfidence.add(singleBrick['confidence']);
         bordersX.add(singleBrick['xmin']);
         bordersY.add(singleBrick['ymin']);
         bordersWidth.add(singleBrick['xmax'] - singleBrick['xmin']);
@@ -153,13 +164,11 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         children: [
           Stack(children: <Widget>[
             Container(
-              height: 500,
+              height: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
                 border: Border.all(width: 3, color: Colors.grey),
               ),
               child: pickedImage != null
-                  // ? Image.asset(pickedImage.path,
-                  //     fit: BoxFit.fitHeight, width: 512, height: 512)
                   ? AspectRatio(
                       aspectRatio: 1,
                       child: Image.asset(
@@ -171,28 +180,22 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                       'No Image Taken',
                       textAlign: TextAlign.center,
                     ),
-              alignment: Alignment.topCenter,
+              alignment: Alignment.center,
             ),
             if (isVisibleCircle)
               for (int i = 0; i < bordersNames.length; i++)
                 if (isVisibleCircle)
                   AddBorder(
-                      // bordersNames[i],
-                      // bordersX[i].toDouble() *
-                      //     ((MediaQuery.of(context).size.width) / 1024),
-                      // bordersY[i].toDouble() * ((500) / 1024),
-                      // bordersWidth[i].toDouble() *
-                      //     ((MediaQuery.of(context).size.width) / 1024),
-                      // bordersHeight[i].toDouble() * ((500) / 1024)),
                       bordersNames[i],
+                      bordersConfidence[i],
                       bordersX[i].toDouble() *
-                          ((MediaQuery.of(context).size.width) / 512),
+                          ((MediaQuery.of(context).size.width)),
                       bordersY[i].toDouble() *
-                          ((MediaQuery.of(context).size.width) / 512),
+                          ((MediaQuery.of(context).size.width)),
                       bordersWidth[i].toDouble() *
-                          ((MediaQuery.of(context).size.width) / 512),
+                          ((MediaQuery.of(context).size.width)),
                       bordersHeight[i].toDouble() *
-                          ((MediaQuery.of(context).size.width) / 512)),
+                          ((MediaQuery.of(context).size.width))),
           ]),
           const SizedBox(
             height: 20,
