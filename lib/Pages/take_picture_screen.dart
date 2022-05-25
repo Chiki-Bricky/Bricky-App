@@ -9,6 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as syspaths;
 import '../send_image.dart';
 import 'dart:math';
+import 'globals.dart' as globals;
 
 class TakePictureScreen extends StatefulWidget {
   static const routeName = '/take-picture';
@@ -77,7 +78,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   List bordersY = [];
   List bordersWidth = [];
   List bordersHeight = [];
-  List bordersNames = [];
   List bordersConfidence = [];
   bool isVisibleCircle = false;
 
@@ -112,7 +112,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   void clearBorders() {
-    bordersNames.clear();
+    globals.bordersNames.clear();
     bordersConfidence.clear();
     bordersX.clear();
     bordersY.clear();
@@ -141,7 +141,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       for (int i = 0; i < bricks.length; i++) {
         final singleBrick = bricks[i];
         print(singleBrick);
-        bordersNames.add(singleBrick['class']);
+        globals.bordersNames.add(singleBrick['class']);
         bordersConfidence.add(singleBrick['confidence']);
         bordersX.add(singleBrick['xmin']);
         bordersY.add(singleBrick['ymin']);
@@ -168,13 +168,19 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               decoration: BoxDecoration(
                 border: Border.all(width: 3, color: Colors.grey),
               ),
+              // child: pickedImage != null
+              //     ? AspectRatio(
+              //         aspectRatio: 1,
+              //         child: Image.asset(
+              //           pickedImage.path,
+              //           fit: BoxFit.fill,
+              //         ),
+              //       )
               child: pickedImage != null
-                  ? AspectRatio(
-                      aspectRatio: 1,
-                      child: Image.asset(
-                        pickedImage.path,
-                        fit: BoxFit.fill,
-                      ),
+                  ? Image.file(
+                      pickedImage as File,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
                     )
                   : const Text(
                       'No Image Taken',
@@ -183,10 +189,10 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               alignment: Alignment.center,
             ),
             if (isVisibleCircle)
-              for (int i = 0; i < bordersNames.length; i++)
+              for (int i = 0; i < globals.bordersNames.length; i++)
                 if (isVisibleCircle)
                   AddBorder(
-                      bordersNames[i],
+                      globals.bordersNames[i],
                       bordersConfidence[i],
                       bordersX[i].toDouble() *
                           ((MediaQuery.of(context).size.width)),
@@ -218,6 +224,17 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             label: const Text('Send Photo'),
             onPressed: _sendPhoto,
           ),
+          TextButton.icon(
+              icon: const Icon(Icons.add_box),
+              label: const Text('Add to Gallery'),
+              onPressed: () {
+                setState(() {
+                  globals.bordersNames.add("Det1");
+                  globals.bordersNames.add("Det2");
+                  globals.bordersNames.add("Det3");
+                });
+                Navigator.of(context).pop();
+              }),
           Text(serverResponse ?? 'No request'),
         ],
       ),

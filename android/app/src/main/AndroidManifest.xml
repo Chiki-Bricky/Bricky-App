@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.flutter_application_1">
+    package="com.example.Bricky">
    <application
-        android:label="flutter_application_1"
+        android:label="Bricky"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -40,4 +40,3 @@
     </application>
     <uses-permission android:name="android.permission.INTERNET"/>
 </manifest>
-
