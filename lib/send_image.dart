@@ -18,7 +18,8 @@ class ServerAPI with ChangeNotifier {
         (await rootBundle.load(pickedImage.path)).buffer.asUint8List();
     String base64Image = base64Encode(imageBytes);
 
-    final url = Uri.parse('http://10.192.18.34:5000/proccessImage');
+    // final url = Uri.parse('http://10.192.18.34:5000/proccessImage');
+    final url = Uri.parse('http://192.168.31.234:5000/proccessImage');
     final response = await http.post(
       url,
       headers: <String, String>{

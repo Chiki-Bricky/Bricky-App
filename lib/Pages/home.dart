@@ -1,6 +1,8 @@
 // @dart=2.9
 // ignore_for_file: prefer_const_constructors, unnecessary_new, dead_code
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,26 +15,18 @@ class Home extends StatefulWidget {
     Key key,
   }) : super(key: key);
 
-  // final CameraDescription camera;
-
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  // late String _userToDO;
-  // String userToDO;
-  // List detailList = [];
   String docsPath;
 
   @override
   Future<void> initState() {
-    // TODO: implement initState
     super.initState();
     final appDir = getApplicationDocumentsDirectory();
     appDir.then((value) => docsPath = '${value.path}/');
-
-    // globals.detailList.addAll(['detail 1', 'detail 2', 'detail 3']);
   }
 
   void openCamera(BuildContext ctx) {
@@ -93,7 +87,7 @@ class _HomeState extends State<Home> {
                         color: Colors.grey.withOpacity(0.5),
                         spreadRadius: 5,
                         blurRadius: 7,
-                        offset: Offset(0, 3), // changes position of shadow
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
@@ -130,8 +124,9 @@ class _HomeState extends State<Home> {
                                         Color.fromRGBO(255, 5, 5, 100),
                                     centerTitle: true,
                                   ),
-                                  body: Center(
-                                    child: Column(
+                                  body: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
                                         Stack(children: <Widget>[
                                           Image.asset(
@@ -161,24 +156,57 @@ class _HomeState extends State<Home> {
                                                           .toDouble() *
                                                       ((MediaQuery.of(context).size.width)))
                                         ]),
-                                        TextButton(
-                                          child: Text(
-                                            globals.photosPaths[index],
-                                            style: TextStyle(
-                                              color:
-                                                  Color.fromRGBO(0, 0, 0, 100),
-                                              fontSize: 17,
-                                              fontFamily:
-                                                  "MochiyPopPOne-Regular",
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                        Container(
+                                          height: 300,
+                                          width: double.infinity,
+                                          child: ListView.builder(
+                                              itemCount: globals
+                                                  .photoDetails[globals
+                                                      .photosPaths[index]]
+                                                  .length,
+                                              itemBuilder:
+                                                  (BuildContext partContext,
+                                                      int partIndex) {
+                                                return Container(
+                                                    height: 100,
+                                                    padding:
+                                                        EdgeInsets.fromLTRB(
+                                                            16, 5, 16, 5),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: <Widget>[
+                                                        Text(
+                                                          globals.photoDetails[
+                                                                  globals.photosPaths[
+                                                                      index]][
+                                                              partIndex]['class'],
+                                                          style: TextStyle(
+                                                            color:
+                                                                Color.fromRGBO(
+                                                                    0,
+                                                                    0,
+                                                                    0,
+                                                                    100),
+                                                            fontSize: 17,
+                                                            fontFamily:
+                                                                "MochiyPopPOne-Regular",
+                                                          ),
+                                                        ),
+                                                        Image.asset(
+                                                            '${docsPath}/${globals.photosPaths[index]}_${partIndex}',
+                                                            width: 100,
+                                                            height: 100),
+                                                        Image.asset(
+                                                            'assets/bricks/${globals.photoDetails[globals.photosPaths[index]][partIndex]['class']}.jpeg',
+                                                            width: 100,
+                                                            height: 100),
+                                                      ],
+                                                    ));
+                                              }),
+                                        )
+                                      ]),
                                 );
                               },
                             ));

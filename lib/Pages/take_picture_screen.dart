@@ -7,6 +7,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../send_image.dart';
+import 'package:image/image.dart' as ImageCrop;
 import 'borders.dart';
 import 'globals.dart' as globals;
 
@@ -23,13 +24,15 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   static File pickedImage;
   String serverResponse;
 
-  List bordersX = [];
-  List bordersY = [];
-  List bordersWidth = [];
-  List bordersHeight = [];
-  List bordersConfidence = [];
-  bool isVisibleCircle = false;
   String fileName = null;
+  String docsPath;
+
+  @override
+  Future<void> initState() {
+    super.initState();
+    final appDir = getApplicationDocumentsDirectory();
+    appDir.then((value) => docsPath = '${value.path}');
+  }
 
   void onSelectImage(File selectedImage) {
     pickedImage = selectedImage;
@@ -59,9 +62,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
           maxHeight: 640,
           compressFormat: ImageCompressFormat.jpg);
 
-      final appDir = await getApplicationDocumentsDirectory();
       final fileName = 'Image_${globals.photosPaths.length}';
-      final imagePath = '${appDir.path}/${fileName}';
+      final imagePath = '${docsPath}/${fileName}';
       final savedImage = await File(cropped.path).copy(imagePath);
 
       globals.photosPaths.add(fileName);
@@ -73,21 +75,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     } else {
       pickedImage = null;
     }
-    clearBorders();
-  }
-
-  void clearBorders() {
-    // globals.bordersNames.clear();
-    bordersConfidence.clear();
-    bordersX.clear();
-    bordersY.clear();
-    bordersWidth.clear();
-    bordersHeight.clear();
   }
 
   Future<void> _sendPhoto() async {
-    clearBorders();
-
     if (pickedImage == null) {
       setState(() {
         serverResponse = "No image provided!";
@@ -95,6 +85,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       return;
     }
     http.Response response = await ServerAPI.sendPhoto(pickedImage);
+
+    final decodedImage =
+        await decodeImageFromList(pickedImage.readAsBytesSync());
     print("Response status: ${response.statusCode}");
 
     final Map parsed = json.decode(response.body);
@@ -107,13 +100,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       final photoBricks = [];
       for (int i = 0; i < bricks.length; i++) {
         final singleBrick = bricks[i];
-        print(singleBrick);
-        // globals.bordersNames.add(singleBrick['class']);
-        bordersConfidence.add(singleBrick['confidence']);
-        bordersX.add(singleBrick['xmin']);
-        bordersY.add(singleBrick['ymin']);
-        bordersWidth.add(singleBrick['xmax'] - singleBrick['xmin']);
-        bordersHeight.add(singleBrick['ymax'] - singleBrick['ymin']);
 
         final brickMap = {
           "class": singleBrick['class'],
@@ -125,12 +111,20 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         };
 
         photoBricks.add(brickMap);
+
+        final brickImage = ImageCrop.copyCrop(
+            ImageCrop.decodeImage(
+                File('${docsPath}/${fileName}').readAsBytesSync()),
+            (brickMap['x'] * decodedImage.width).toInt(),
+            (brickMap['y'] * decodedImage.width).toInt(),
+            (brickMap['width'] * decodedImage.width).toInt(),
+            (brickMap['height'] * decodedImage.width).toInt());
+        File('${docsPath}/${fileName}_${i}')
+            .writeAsBytes(ImageCrop.encodePng(brickImage));
       }
-      if (this.fileName != null &&
-          globals.photoDetails[this.fileName] == null) {
-        globals.photoDetails[this.fileName] = photoBricks;
+      if (fileName != null && globals.photoDetails[fileName] == null) {
+        globals.photoDetails[fileName] = photoBricks;
       }
-      isVisibleCircle = true;
     });
   }
 
@@ -150,14 +144,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               decoration: BoxDecoration(
                 border: Border.all(width: 3, color: Colors.grey),
               ),
-              // child: pickedImage != null
-              //     ? AspectRatio(
-              //         aspectRatio: 1,
-              //         child: Image.asset(
-              //           pickedImage.path,
-              //           fit: BoxFit.fill,
-              //         ),
-              //       )
               child: pickedImage != null
                   ? Image.file(
                       pickedImage as File,
@@ -170,24 +156,23 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                     ),
               alignment: Alignment.center,
             ),
-            if (isVisibleCircle &&
-                this.fileName != null &&
+            if (this.fileName != null &&
                 globals.photoDetails[this.fileName] != null)
               for (int i = 0;
                   i < globals.photoDetails[this.fileName].length;
                   i++)
-                if (isVisibleCircle)
-                  AddBorder(
-                      globals.photoDetails[this.fileName][i]['class'],
-                      bordersConfidence[i],
-                      bordersX[i].toDouble() *
-                          ((MediaQuery.of(context).size.width)),
-                      bordersY[i].toDouble() *
-                          ((MediaQuery.of(context).size.width)),
-                      bordersWidth[i].toDouble() *
-                          ((MediaQuery.of(context).size.width)),
-                      bordersHeight[i].toDouble() *
-                          ((MediaQuery.of(context).size.width))),
+                AddBorder(
+                    globals.photoDetails[this.fileName][i]['class'],
+                    globals.photoDetails[this.fileName][i]['confidence'],
+                    globals.photoDetails[this.fileName][i]['x'].toDouble() *
+                        ((MediaQuery.of(context).size.width)),
+                    globals.photoDetails[this.fileName][i]['y'].toDouble() *
+                        ((MediaQuery.of(context).size.width)),
+                    globals.photoDetails[this.fileName][i]['width'].toDouble() *
+                        ((MediaQuery.of(context).size.width)),
+                    globals.photoDetails[this.fileName][i]['height']
+                            .toDouble() *
+                        ((MediaQuery.of(context).size.width))),
           ]),
           const SizedBox(
             height: 20,
@@ -210,17 +195,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             label: const Text('Send Photo'),
             onPressed: _sendPhoto,
           ),
-          // TextButton.icon(
-          //     icon: const Icon(Icons.add_box),
-          //     label: const Text('Add to Gallery'),
-          //     onPressed: () {
-          //       setState(() {
-          //         globals.bordersNames.add("Det1");
-          //         globals.bordersNames.add("Det2");
-          //         globals.bordersNames.add("Det3");
-          //       });
-          //       Navigator.of(context).pop();
-          //     }),
           Text(serverResponse ?? 'No request'),
         ],
       ),
