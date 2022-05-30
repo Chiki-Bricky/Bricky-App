@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-// import 'package:image_cropper/image_cropper.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart' as syspaths;
@@ -100,14 +100,26 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       return;
     }
 
-    final appDir = await syspaths.getApplicationDocumentsDirectory();
-    final fileName = path.basename(imageFile.path);
-    final savedImage =
-        await File(imageFile.path).copy('${appDir.path}/$fileName');
+    if (imageFile != null) {
+      CroppedFile cropped = await ImageCropper().cropImage(
+          sourcePath: imageFile.path,
+          aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+          compressQuality: 100,
+          maxWidth: 640,
+          maxHeight: 640,
+          compressFormat: ImageCompressFormat.jpg);
 
-    setState(() {
-      pickedImage = savedImage;
-    });
+      final appDir = await syspaths.getApplicationDocumentsDirectory();
+      final fileName = path.basename(cropped.path);
+      final savedImage =
+          await File(cropped.path).copy('${appDir.path}/$fileName');
+
+      setState(() {
+        pickedImage = savedImage;
+      });
+    } else {
+      pickedImage = null;
+    }
     clearBorders();
   }
 
